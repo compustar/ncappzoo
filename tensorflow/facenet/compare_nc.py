@@ -33,6 +33,7 @@ import sys
 import os
 import copy
 import argparse
+import facenet
 import align.detect_face
 sys.path.insert(0, "../../ncapi2_shim")
 import mvnc_simple_api as mvnc
@@ -40,13 +41,6 @@ import cv2
 import time
 
 GRAPH_FILENAME = "facenet_celeb_ncs.graph"
-
-def whiten_image(source_image):
-    source_mean = np.mean(source_image)
-    source_standard_deviation = np.std(source_image)
-    std_adjusted = np.maximum(source_standard_deviation, 1.0 / np.sqrt(source_image.size))
-    whitened_image = np.multiply(np.subtract(source_image, source_mean), 1 / std_adjusted)
-    return whitened_image
 
 def run_inference(image_to_classify, facenet_graph):
 
@@ -157,7 +151,7 @@ def load_and_align_data(image_paths, image_size, margin, gpu_memory_fraction):
         bb[3] = np.minimum(det[3]+margin/2, img_size[0])
         cropped = img[bb[1]:bb[3],bb[0]:bb[2],:]
         aligned = misc.imresize(cropped, (image_size, image_size), interp='bilinear')
-        prewhitened = whiten_image(aligned)
+        prewhitened = facenet.prewhiten(aligned)
         img_list.append(prewhitened)
     images = np.stack(img_list)
     return images
